@@ -1,0 +1,35 @@
+{
+    "bot_staff": [
+      {
+        "671374842951630858": {
+          "rank": "developer",
+          "user": {
+            "username": "sleepy_moonyyy",
+            "display": "Moony"
+          }
+        },
+        "211467731961118720": {
+          "rank": "admin",
+          "user": {
+            "username": "no0bst3r",
+            "display": "No0bSt3r"
+          }
+        },
+        "83238083859845120": {
+          "rank": "admin",
+          "user": {
+            "username": "user321",
+            "display": "User321"
+          }
+        },
+        "263711154281512964": {
+          "rank": "admin",
+          "user": {
+            "username": "ophidian",
+            "display": "Ophidian"
+          }
+        }
+      }
+    ],
+    "developer": "671374842951630858"
+  }
