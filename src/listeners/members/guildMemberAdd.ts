@@ -7,7 +7,6 @@ import {
   dataInObject,
   Defaults,
   Leveling,
-  MAIN_OWNER,
   MessageEmbed,
   OWNER,
 } from "../../lib/index";
