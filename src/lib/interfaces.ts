@@ -55,8 +55,32 @@ export interface Leveling {
   canPrestige: "true" | "false";
 }
 
-interface Punishment {
-  type: "warning" | "mute" | "kick" | "ban";
+export interface Profile {
+  userID: string;
+  // country: string;
+  // hobbies: string[];
+  // age: number;
+  bio: string;
+  country: string;
+  footer: string;
+  display_server_joined_at: boolean;
+  display_account_joined_at: boolean;
+  embed_color: string;
+  // Display server leveling, containing only the level and the amount of messages.
+  //  Display the highest server leveling, containing only the level and the amount of messages.
+}
+
+export interface Game {
+  userID: string;
+  current_equiped_weapon: string;
+  items: string[];
+  already_bought_nickname: boolean;
+  next_nickname_allowance_at: string;
+  slain_monsters: number;
+}
+
+export interface Punishment {
+  type: PunishTypes;
   time?: {
     str: string;
     duration: number;

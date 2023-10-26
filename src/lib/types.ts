@@ -8,9 +8,18 @@ import type {
     StageChannel,
     TextBasedChannel, TextChannel, User
 } from "discord.js";
+import type {
+    Economy,
+    Leveling,
+    Logging,
+    Profile,
+    Punishment,
+    Tickets,
+    Verify
+} from "./index";
 
 /** Gets the keys of a type as a type */
-export type KeyofType<T extends any> = T extends any ? keyof T : KeyofType<typeof T>;
+export type KeyofType<T extends any> = T extends any ? keyof T : never;
 
 /** Creates getters for specified object type */
 export type Getters<T> = {
@@ -126,4 +135,12 @@ export type GuildTextChannels =
     | TextChannel
     | ForumChannel;
 
-export type 
+export type EnsurableObjects =
+    | Leveling
+    | Economy
+    | Profile
+    | Punishment
+    | Tickets
+    | Logging
+    | Verify
+    | Profile;

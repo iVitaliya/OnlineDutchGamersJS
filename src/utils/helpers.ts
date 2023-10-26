@@ -14,6 +14,7 @@ import ms from "parse-ms";
 import {
   Database,
   DestinationType,
+  EnsurableObjects,
   FooterText,
   KeyofType,
   Leveling,
@@ -424,6 +425,9 @@ export async function findEntry(
   return callback;
 }
 
-export async function ensureLevel(table: KeyofType<typeof >) {
-
+export async function ensureDatabase(table: KeyofType<typeof Database>, config: {
+  userID: string;
+  guildID: string;
+}, ensurables: EnsurableObjects) {
+  const tab = Database[table];
 }
