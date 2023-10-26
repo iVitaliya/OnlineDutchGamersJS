@@ -22,7 +22,7 @@ export class GuildMemberAdd extends Listener {
   public async run(member: GuildMember) {
     const { guild, id } = member;
     const guildId = guild.id;
-    const cache = new CacheResolver(member.guild);
+    const cache = new CacheResolver(guild);
 
     const data = await dataInObject("leveling", "leveling", id);
     if (!data) {

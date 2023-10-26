@@ -15,6 +15,7 @@ import {
   Database,
   DestinationType,
   FooterText,
+  KeyofType,
   Leveling,
   MessageContentMessages,
   MessageEmbed,
@@ -421,4 +422,8 @@ export async function findEntry(
   entries.filter((x) => x.action === event);
 
   return callback;
+}
+
+export async function ensureLevel(table: KeyofType<typeof >) {
+
 }

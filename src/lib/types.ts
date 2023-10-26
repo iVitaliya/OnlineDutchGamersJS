@@ -10,7 +10,7 @@ import type {
 } from "discord.js";
 
 /** Gets the keys of a type as a type */
-export type KeyofType<T> = keyof T;
+export type KeyofType<T extends any> = T extends any ? keyof T : KeyofType<typeof T>;
 
 /** Creates getters for specified object type */
 export type Getters<T> = {
@@ -125,3 +125,5 @@ export type GuildTextChannels =
     | StageChannel
     | TextChannel
     | ForumChannel;
+
+export type 
