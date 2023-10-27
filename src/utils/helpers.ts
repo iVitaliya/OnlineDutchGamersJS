@@ -425,9 +425,25 @@ export async function findEntry(
   return callback;
 }
 
-export async function ensureDatabase(table: KeyofType<typeof Database>, config: {
-  userID: string;
-  guildID: string;
-}, ensurables: EnsurableObjects) {
+export async function hasDatabaseItem(table: KeyofType<typeof Database>, key: string): boolean {
   const tab = Database[table];
+  const data = await tab.getAll();
+
+  for (let i = 0; i < data.length; i++) {
+    let payload = data[i];
+
+    if (payload.key === key) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export async function ensureDatabase(table: KeyofType<typeof Database>, key: string, ensurables: EnsurableObjects) {
+  const tab = Database[table];
+  const data = await tab.getAll();
+  const original_data = hasDatabaseItem(table, key);
+
+  
 }
