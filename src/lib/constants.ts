@@ -1,5 +1,6 @@
 import type { User } from "discord.js";
 import { join, resolve } from "path";
+import type { Economy, Game, Leveling, Logging, Profile, Punishment, Tickets } from "./index";
 
 export const rootDir = resolve(join(process.cwd()));
 export const srcDir = resolve(join(rootDir, "dist"));
@@ -39,11 +40,63 @@ export const Reasons = {
 };
 
 export const Defaults = {
+  MAIN_SERVER: "263719424932970498",
   welcome_message: (user: User) =>
-    `${user.displayName} has joined Online Dutch Gamers, welcome them :)`,
+    `${user.displayName} (${user.username}) has joined Online Dutch Gamers, welcome them :)`,
+  database_ensures: {
+    economy: (userID: string) => {
+      return {
+        userID: userID,
+        balance: 100,
+        bank: 0,
+        last_robbed: -1,
+        last_worked: -1,
+      } as Economy;
+    },
+    profiles: (userID: string) => {
+      return {
+        userID: userID,
+        bio: "",
+        country: "",
+        display_created_at: false,
+        display_account_joined_at: false,
+        embed_color: Colors.Main,
+        footer: "",
+        display_own_level: false,
+        display_highest_level: false
+      } as Profile;
+    },
+    leveling: (userID: string) => {
+      return {
+        userID: userID,
+        messages: 0,
+        level: 1,
+        prestige: 0,
+        canPrestige: "false"
+      } as Leveling;
+    },
+    game: (userID: string) => {
+      return {
+        userID: userID,
+        current_equiped_weapon: "null",
+        items: [] as string[],
+        already_bought_nickname: false,
+        next_nickname_allowance_at: "null",
+        slain_monsters: 0
+      } as Game;
+    },
+    logging: {
+      modLoggingChannelID: "null",
+      inviteLogChannelID: "null",
+      memberLogChannelID: "null",
+      messageLogChannelID: "null",
+      reportsLogChannelID: "null",
+      actionsChannelID: "null",
+    } as Logging,
+  },
 };
 
-enum Colors {
+export enum Colors {
   Main = "#002afc",
   //Success = "#00f26d",
   Cancel = "#ef3f4c",
@@ -67,7 +120,7 @@ enum Colors {
   Bugs = "#a6a7ab",
 }
 
-enum Icons {
+export enum Icons {
   Main = "https://i.imgur.com/It9BNU8.png",
   Cancel = "https://i.imgur.com/U3HAPvp.png",
   Pushing = "https://i.imgur.com/tJgejcp.png",

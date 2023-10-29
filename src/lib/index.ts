@@ -16,6 +16,7 @@ export * from "../formatting/string";
 /////////////////////////////
 export * from "./constants";
 export * from "./database";
+export * from "./database.methods";
 export * from "./embed";
 export * from "./env-parser";
 export * from "./interfaces";

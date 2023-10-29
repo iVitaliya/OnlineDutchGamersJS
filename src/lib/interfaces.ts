@@ -62,12 +62,14 @@ export interface Profile {
   // age: number;
   bio: string;
   country: string;
-  footer: string;
-  display_server_joined_at: boolean;
+  display_created_at: boolean;
   display_account_joined_at: boolean;
   embed_color: string;
+  footer: string;
   // Display server leveling, containing only the level and the amount of messages.
-  //  Display the highest server leveling, containing only the level and the amount of messages.
+  display_own_level: boolean;
+  // Displays the user with the most messages and level.
+  display_highest_level: boolean;
 }
 
 export interface Game {
@@ -81,16 +83,14 @@ export interface Game {
 
 export interface Punishment {
   type: PunishTypes;
+  userID: string;
   time?: {
     str: string;
     duration: number;
   };
   temporary: "true" | "false";
   at: string;
-  punished_by: {
-    username: string;
-    display: string;
-  };
+  modID: string;
   reason: string;
   silent: "true" | "false";
   revoked: "true" | "false";

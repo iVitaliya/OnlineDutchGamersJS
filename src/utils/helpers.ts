@@ -4,8 +4,11 @@ import {
   ChannelType,
   Collection,
   Guild,
+  GuildAuditLogsActionType,
   GuildAuditLogsEntry,
+  GuildAuditLogsTargetType,
   GuildMember,
+  PermissionFlagsBits,
   PermissionResolvable,
   TextChannel as GuildTextChannel,
 } from "discord.js";
@@ -18,6 +21,7 @@ import {
   FooterText,
   KeyofType,
   Leveling,
+  MAIN_OWNER,
   MessageContentMessages,
   MessageEmbed,
   OwnerType,
@@ -412,20 +416,23 @@ export async function moduleFetch(
   return !included ? false : mod;
 }
 
-export async function findEntry(
-  guild: Guild,
-  event: AuditLogEvent,
-  callback: (entry: GuildAuditLogsEntry<AuditLogEvent>) => boolean,
-) {
-  const logs = await guild.fetchAuditLogs();
-  const entries = logs.entries;
+// export async function findEntry(
+//   guild: Guild,
+//   event: AuditLogEvent,
+//   callback: (entry: GuildAuditLogsEntry<AuditLogEvent>) => boolean,
+// ) {
+//   const logs = await guild.fetchAuditLogs();
+//   const entries = logs.entries;
 
-  entries.filter((x) => x.action === event);
+//   entries.filter((x) => x.action === event);
 
-  return callback;
-}
+//   return callback;
+// }
 
-export async function hasDatabaseItem(table: KeyofType<typeof Database>, key: string): boolean {
+export async function hasDatabaseItem(
+  table: KeyofType<typeof Database>,
+  key: string,
+): Promise<boolean> {
   const tab = Database[table];
   const data = await tab.getAll();
 
@@ -440,10 +447,157 @@ export async function hasDatabaseItem(table: KeyofType<typeof Database>, key: st
   return false;
 }
 
-export async function ensureDatabase(table: KeyofType<typeof Database>, key: string, ensurables: EnsurableObjects) {
+export async function ensureDatabase(
+  table: KeyofType<typeof Database>,
+  key: string,
+  ensurables: EnsurableObjects,
+) {
   const tab = Database[table];
-  const data = await tab.getAll();
-  const original_data = hasDatabaseItem(table, key);
+  const data = await hasDatabaseItem(table, key);
 
+  if (data) return;
+
+  tab.set(key, ensurables);
+}
+
+export async function limits() {
   
+}
+
+export async function getEntry(key: string, fallback = null) {
+  return Database.logging.get(`guardian.${key}`, fallback);
+}
+
+export async function setEntry(key: string, data: any) {
+  return Database.logging.set(`guardian.${key}`, data);
+}
+
+export async function deleteEntry(key: string) {
+  return Database.logging.delete(`guardian.${key}`);
+}
+
+export async function findEntry(
+  guild: Guild,
+  action: AuditLogEvent,
+  filter: (
+    fn: GuildAuditLogsEntry<
+      null,
+      GuildAuditLogsActionType,
+      GuildAuditLogsTargetType,
+      AuditLogEvent
+    >,
+  ) => boolean,
+): Promise<
+  GuildAuditLogsEntry<
+    AuditLogEvent,
+    GuildAuditLogsActionType,
+    GuildAuditLogsTargetType,
+    AuditLogEvent
+  > | null
+> {
+  const me = await guildMe(guild);
+
+  return new Promise(
+    (resolve) => {
+      // @ts-ignore
+      (async function search(iter) {
+        if (!me) return resolve(null);
+
+        if (me.permissions.has(PermissionFlagsBits.ViewAuditLog, true)) {
+          let logs = await guild.fetchAuditLogs({
+            limit: 10,
+            type: action,
+          });
+          let entries = logs.entries;
+          let entry:
+            | GuildAuditLogsEntry<
+              AuditLogEvent,
+              GuildAuditLogsActionType,
+              GuildAuditLogsTargetType,
+              AuditLogEvent
+            >
+            | null = null;
+
+          entries = entries.filter(filter);
+
+          for (var e of entries) {
+            if (!entry || e[0] > entry.id) entry = e[1];
+          }
+
+          // @ts-ignore
+          if (entry) return resolve(entry);
+        }
+
+        if (++iter === 5) return resolve(null);
+        else return setTimeout(search, 200, iter);
+      })(0);
+    },
+  );
+}
+
+export async function pushEntry(
+  entry: GuildAuditLogsEntry<
+    AuditLogEvent,
+    GuildAuditLogsActionType,
+    GuildAuditLogsTargetType,
+    AuditLogEvent
+  >,
+  displayName: string,
+) {
+  const action =
+    [AuditLogEvent.MemberKick, AuditLogEvent.MemberBanAdd].includes(
+        entry.action,
+      )
+      ? "MEMBER_REMOVE"
+      : (
+        entry.action === AuditLogEvent.MemberKick
+          ? "MEMBER_KICK"
+          : (entry.action === AuditLogEvent.MemberBanAdd
+            ? "MEMBER_BAN_ADD"
+            : "UNKNOWN")
+      );
+  const oneHourAgo = Date.now() - 1000 * 60 * 60;
+
+  // Fetch Entries for a sepcific action (Last Hour)
+  let entries = getEntry(action, []);
+
+  // Filter entries older than one hour to a new variable
+  let olderThanOneHour = entries.filter((x) => !(x.timestamp > oneHourAgo));
+
+  // Prepend entries older than one hour to the archive
+  if (olderThanOneHour.length > 0) {
+    setEntry(`archive.${action}`, [
+      ...olderThanOneHour,
+      ...getEntry(`archive.${action}`, []),
+    ]);
+  }
+
+  // Filter entries older than one hour from old variable
+  entries = entries.filter((x) => x.timestamp > oneHourAgo);
+
+  // Prepend new entry if not already found
+  if (
+    !entries.find(
+      (x) =>
+        x.target.id === entry.target.id &&
+        x.executor.id === entry.executor.id,
+    )
+  ) {
+    entries.unshift({
+      timestamp: entry.createdTimestamp,
+      action: entry.action,
+      target: {
+        id: entry.target.id,
+        displayName,
+        targetType: entry.targetType,
+      },
+      executor: {
+        id: entry.executor.id,
+        displayName: entry.executor.tag,
+      },
+    });
+  }
+
+  // Update entries newer than one hour.
+  return setEntry(action, entries);
 }

@@ -10,7 +10,7 @@ import type {
 } from "discord.js";
 import moment from "moment";
 
-import type { RemoveField, ToArray } from "./index";
+import type { Optional, RemoveField, ToArray } from "./index";
 import { EmbedThemes, EmbedTypes } from "./index";
 
 const EmbedLimits = {
@@ -116,7 +116,7 @@ export class MessageEmbed implements APIEmbed {
    * See https://discord.com/developers/docs/resources/channel#embed-object-embed-author-structure
    */
   public setAuthor(
-    data: RemoveField<APIEmbedAuthor, "icon_url" | "proxy_icon_url">,
+    data: Optional<RemoveField<APIEmbedAuthor, "icon_url" | "proxy_icon_url">, "name">,
   ): MessageEmbed {
     this.author = {
       name: this.fitData(data.name, EmbedLimits.author.name),

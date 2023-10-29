@@ -62,7 +62,7 @@ function Sweeper() {
   };
 }
 
-const client = new SapphireClient({
+export const client = new SapphireClient({
   defaultPrefix: "odg!",
   regexPrefix: /^(hey +)?odg[,! ]/i,
   defaultCooldown: {

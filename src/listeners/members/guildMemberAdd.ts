@@ -4,9 +4,9 @@ import { ChannelType, Events, GuildMember, TextChannel } from "discord.js";
 import {
   CacheResolver,
   Database,
-  dataInObject,
   Defaults,
-  Leveling,
+  ensureDatabase,
+  LoggingMessages,
   MessageEmbed,
   OWNER,
 } from "../../lib/index";
@@ -21,26 +21,30 @@ export class GuildMemberAdd extends Listener {
 
   public async run(member: GuildMember) {
     const { guild, id } = member;
-    const guildId = guild.id;
     const cache = new CacheResolver(guild);
 
-    const data = await dataInObject("leveling", "leveling", id);
-    if (!data) {
-      await Database.leveling.set(`leveling.${id}`, {
-        userID: id,
-        messages: 0,
-        level: 0,
-        prestige: 0,
-        canPrestige: "false",
-      } as Leveling);
-    }
+    await ensureDatabase("economy", id, Defaults.database_ensures.economy(id));
+    await ensureDatabase(
+      "profiles",
+      id,
+      Defaults.database_ensures.profiles(id),
+    );
+    await ensureDatabase(
+      "leveling",
+      id,
+      Defaults.database_ensures.leveling(id),
+    );
+    await ensureDatabase("game", id, Defaults.database_ensures.game(id));
 
     // Gets the logging channel.
     const welcomeLogChannel = await Database.logging.get(
-      `channels.welcome`,
+      LoggingMessages.CHANNELS.Welcome,
       "null",
     );
-    const welcomeMsg = await Database.logging.get(`messages.welcome`, "null");
+    const welcomeMsg = await Database.logging.get(
+      LoggingMessages.MESSAGES.Welcome,
+      "null",
+    );
 
     // Check an if statement for if the logging channel can't be found,
     // only message the server owner, message the server owner if enabled
@@ -51,9 +55,9 @@ export class GuildMemberAdd extends Listener {
         owner.send({
           embeds: [
             new MessageEmbed("Blocked")
-              .setAuthor({ name: "No Log-Channel" })
+              .setAuthor({ name: "No Log-Channel Detected" })
               .setDescription(
-                "A member has joined the server but the log-channel to log joined members hasn't been setup yet, please do so by using \`/config log-members\`",
+                "A member has joined the server but the log-channel to log joined members hasn't been setup yet, please do so by using \`/config welcome_channel\`",
               )
               .build,
           ],
@@ -65,19 +69,22 @@ export class GuildMemberAdd extends Listener {
       const channelObj = cache.channel(welcomeLogChannel as string);
       const wlcmMsg = (welcomeMsg as string).replace(
         "[User]",
-        member.user.displayName,
+        `<@${member.id}>`,
       )
-        .replace("[User.Mention]", `<@${member.id}>`)
+        .replace(
+          "[User.Name]".toLowerCase(),
+          member.user.displayName.toLowerCase(),
+        )
         .replace("[User.Id]", member.id)
-        .replace("[Guild]", member.guild.name)
-        .replace("[Guild.Id]", member.guild.id);
+        .replace("[Guild]".toLowerCase(), member.guild.name.toLowerCase())
+        .replace("[Guild.Id]".toLowerCase(), member.guild.id);
 
       if (!channelObj.valid_fetch) return;
       if (channelObj.channel_type !== ChannelType.GuildText) return;
       const channel = channelObj.channel as TextChannel;
 
-      wlcmMsg.replace("[Channel]", channel.name)
-        .replace("[Channel.Mention]", `<#${channel.id}>`)
+      wlcmMsg.replace("[Channel]", `<#${channel.id}>`)
+        .replace("[Channel.Name]", channel.name)
         .replace("[Channel.Id]", channel.id);
 
       channel.send({
@@ -86,7 +93,7 @@ export class GuildMemberAdd extends Listener {
             .setAuthor({ name: "A new member has joined!" })
             .setDescription(
               welcomeMsg === "null"
-                ? Defaults.welcome_message(member.user)
+                ? Defaults.welcome_message(member.user) + " "
                 : wlcmMsg,
             )
             .build,

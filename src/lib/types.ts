@@ -2,6 +2,7 @@ import type {
     ChannelType,
     DMChannel,
     ForumChannel,
+    Guild,
     GuildBasedChannel, GuildEmoji,
     GuildMember, Message, NewsChannel, PartialDMChannel,
     PartialGroupDMChannel, Role,
@@ -10,6 +11,7 @@ import type {
 } from "discord.js";
 import type {
     Economy,
+    Game,
     Leveling,
     Logging,
     Profile,
@@ -92,6 +94,11 @@ export type ChannelReturn = {
     channel_type: ChannelTypes | null;
 };
 
+export type GuildReturn = {
+    valid_fetch: boolean;
+    guild: Guild | null;
+};
+
 export type MessageReturn = {
     valid_fetch: boolean;
     message: Message | null;
@@ -143,4 +150,5 @@ export type EnsurableObjects =
     | Tickets
     | Logging
     | Verify
-    | Profile;
+    | Profile
+    | Game;

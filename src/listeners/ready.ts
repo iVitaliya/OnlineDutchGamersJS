@@ -9,6 +9,7 @@ import {
   white,
   yellow,
 } from "colorette";
+import { Defaults, ensureDatabase } from "../lib/index";
 
 const dev = process.env.NODE_ENV !== "production";
 
@@ -22,9 +23,11 @@ export class ReadyEvent extends Listener {
     });
   }
 
-  public run() {
+  public async run() {
     this.printBanner();
     this.printStoreDebugInformation();
+    
+    await ensureDatabase("logging", "263719424932970498", Defaults.database_ensures.logging);
   }
 
   private printBanner() {
