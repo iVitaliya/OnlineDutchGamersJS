@@ -21,6 +21,7 @@ import {
   LoggingMessages,
   MessageEmbed,
   OWNER,
+  pushEntry,
 } from "../../lib/index";
 
 export class GuildMemberRemove extends Listener {
@@ -63,6 +64,8 @@ export class GuildMemberRemove extends Listener {
         x.createdTimestamp > Date.now() - 1000 * 60,
     );
     if (!entry) return;
+
+    let entries = await pushEntry(entry, member.user.username);
 
     
   }

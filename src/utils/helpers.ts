@@ -464,7 +464,7 @@ export async function limits() {
   
 }
 
-export async function getEntry(key: string, fallback = null) {
+export async function getEntry(key: string, fallback?: any) {
   return Database.logging.get(`guardian.${key}`, fallback);
 }
 
@@ -559,45 +559,69 @@ export async function pushEntry(
   const oneHourAgo = Date.now() - 1000 * 60 * 60;
 
   // Fetch Entries for a sepcific action (Last Hour)
-  let entries = getEntry(action, []);
+  let entries = await getEntry(action, [] as any[]) as any;
 
   // Filter entries older than one hour to a new variable
-  let olderThanOneHour = entries.filter((x) => !(x.timestamp > oneHourAgo));
+  let olderThanOneHour = entries.filter((x: { timestamp: number; }) => !(x.timestamp > oneHourAgo));
 
   // Prepend entries older than one hour to the archive
   if (olderThanOneHour.length > 0) {
     setEntry(`archive.${action}`, [
       ...olderThanOneHour,
-      ...getEntry(`archive.${action}`, []),
+      ...await getEntry(`archive.${action}`, [] as any[]) as any,
     ]);
   }
 
   // Filter entries older than one hour from old variable
-  entries = entries.filter((x) => x.timestamp > oneHourAgo);
+  entries = entries.filter((x: { timestamp: number; }) => x.timestamp > oneHourAgo);
 
   // Prepend new entry if not already found
   if (
     !entries.find(
-      (x) =>
-        x.target.id === entry.target.id &&
-        x.executor.id === entry.executor.id,
+      (x: { target: { id: string | null; }; executor: { id: string | null; }; }) =>
+        x.target.id === entry.targetId &&
+        x.executor.id === entry.executorId,
     )
   ) {
     entries.unshift({
       timestamp: entry.createdTimestamp,
       action: entry.action,
       target: {
-        id: entry.target.id,
+        id: entry.targetId,
         displayName,
         targetType: entry.targetType,
       },
       executor: {
-        id: entry.executor.id,
-        displayName: entry.executor.tag,
+        id: entry.executorId,
+        displayName: entry.executor!.username,
       },
     });
   }
 
   // Update entries newer than one hour.
   return setEntry(action, entries);
+}
+
+export async function checkLimits(
+  guild: Guild,  
+  entries: false | {
+    key: string | number;
+    value: any;
+  },
+  executorID: string,
+  configAction: string
+) {
+  if (executorID === guild.ownerId) return;
+
+  const oneMinuteAgo = Date.now() - 1000 * 60;
+  let executorActionsHour = (entries as any).filter(
+    (i: { executor: { id: string; }; }) => i.executor.id === executorID
+  );
+  let executorActionsMinute = executorActionsHour.filter(
+    (i: { timestamp: number; }) => i.timestamp > oneMinuteAgo
+  );
+
+  console.log(`${configAction}/${executorID}: LAST_HOUR: ${executorActionsHour.length} LAST_MINUTE: ${executorActionsMinute.length}`);
+
+  let l = await limits();
 }
